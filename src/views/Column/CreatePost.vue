@@ -22,22 +22,24 @@ const route = useRoute()
 const store = useStore<GlobalDataPros>()
 const titleRef = ref()
 const contentRef = ref()
+const imgUrl = ref()
 
 
 const submitForm = (result: Boolean) => {
+  const uid = store.state.user._id
+  const img = ''
   if (result) {
     const {column} = store.state.user
     const post = <PostProps>{
       column,
       image: '',
-      createAt: new Date().toLocaleString(),
-      _id: new Date().getTime().toString(),
-      description: contentRef.value,
-      title: titleRef.value
-
+      content: contentRef.value,
+      title: titleRef.value,
+      author: uid,
+      avatar: img
     }
-    store.commit('createPost', post)
-    router.push({name: 'column', params: {id: column}})
+    store.dispatch('createPost', post)
+    // router.push({name: 'column', params: {id: column}})
   }
 
 }

@@ -17,7 +17,7 @@ import Message from "@/components/Message.vue";
 import TestRender from "@/components/TestRender";
 import Uploader from "@/components/Uploader.vue";
 import createMessage from "@/views/utils/CreateMessage";
-import {Avatar, BaseResult} from "@/model/ModelDeclare";
+import {ImagePros, BaseResult} from "@/model/ModelDeclare";
 
 const store = useStore<GlobalDataPros>()
 // const user = store.state.user
@@ -43,7 +43,7 @@ const onUploadBefore = (file: File): boolean => {
   console.log('isImg', isImg, file.type)
   return isImg
 }
-const onUploadCompleted = (data: BaseResult<Avatar>) => {
+const onUploadCompleted = (data: BaseResult<ImagePros>) => {
   console.log('data', data.data.url)
 }
 

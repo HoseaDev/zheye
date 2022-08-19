@@ -13,7 +13,7 @@ export interface GlobalErrorMessagePros {
     message?: string
 }
 
-export interface Avatar {
+export interface ImagePros {
     url?: string,
     _id?: string
 }
@@ -27,18 +27,18 @@ export interface BaseResult<T> {
 export interface ColumnProps {
     _id: string,
     title: string,
-    avatar?: Avatar,
+    avatar?: ImagePros,
     descriptionÏ: string
 }
 
 export interface PostProps {
-    _id: string,
+    _id?: string,
     title: string,
     description?: string,
     excerpt?: string,
-    column: string,
-    createAt: string,
-    avatar?: Avatar,
+    column?: string,
+    createAt?: string,
+    avatar?: ImagePros | string,
     author?: string
 }
 

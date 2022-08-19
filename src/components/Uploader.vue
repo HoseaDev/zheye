@@ -32,11 +32,11 @@ type uploadStatus = 'success' | 'ready' | 'uploading' | 'error'
 const fileRef = ref<null | HTMLInputElement>()
 
 const fileStatus = ref<uploadStatus>('ready')
-const uploadData = ref<Avatar>()
+const uploadData = ref<ImagePros>()
 
 
 interface UploadEvents {
-  (e: 'onFileCompleted', result: BaseResult<Avatar>): void,
+  (e: 'onFileCompleted', result: BaseResult<ImagePros>): void,
 
   (e: 'fileUploadError', error: String): void
 
@@ -78,7 +78,7 @@ const triggerUpload = () => {
 
 
 import {PropType} from "vue";
-import {Avatar, BaseResult} from "@/model/ModelDeclare";
+import {ImagePros, BaseResult} from "@/model/ModelDeclare";
 
 
 const restData = () => {

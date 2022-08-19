@@ -86,6 +86,11 @@ const store = createStore<GlobalDataPros>({
         //         return dispatch('fetchCurrentUser')
         //       })
         //     }
+        createPost({commit}, playload) {
+            return postAndCommit('/o/api/posts', 'createPost', commit, playload).then(data => {
+                return data
+            })
+        },
 
         login({dispatch, commit}, user) {
             return postAndCommit('/o/api/user/login', 'setUserToken', commit, user).then(data => {
