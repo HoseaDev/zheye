@@ -16,6 +16,7 @@ import {useStore} from "vuex";
 import {GlobalDataPros} from "@/store";
 import {computed} from "vue";
 import PostList from "@/components/PostList.vue";
+import {objToArr} from "@/hooks/helper";
 
 const route = useRoute()
 const columId = route.params.id;
@@ -25,12 +26,8 @@ const store = useStore<GlobalDataPros>()
 const column = computed(() => {
   return store.state.columns.find(c => c._id === columId)
 })
-const posts = computed(() => store.state.posts.filter(post => post.column === columId))
-store.dispatch('getPostsByColumnId',columId)
-
-
-const columnLength = store.getters.getLength
-const columnLength2 = store.getters.getPostsByCId(columId)
+const posts = computed(() => store.getters.getPostsByCId(columId))
+store.dispatch('getPostsByColumnId', columId)
 
 
 </script>

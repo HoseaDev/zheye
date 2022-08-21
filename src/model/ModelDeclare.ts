@@ -4,7 +4,7 @@ export interface UserProps {
     description?: string,
     nickName?: string,
     email?: string,
-    _id?: number,
+    _id?: string,
     column?: string
 }
 
@@ -13,9 +13,10 @@ export interface GlobalErrorMessagePros {
     message?: string
 }
 
-export interface ImagePros {
+export interface ImageProps {
     url?: string,
-    _id?: string
+    _id?: string,
+    fitUrl:string
 }
 
 export interface BaseResult<T> {
@@ -27,10 +28,12 @@ export interface BaseResult<T> {
 export interface ColumnProps {
     _id: string,
     title: string,
-    avatar?: ImagePros,
+    avatar?: ImageProps |string,
     descriptionÏ: string
 }
-
+export interface ListPost<T>{
+    [id:string]:T
+}
 export interface PostProps {
     _id?: string,
     title: string,
@@ -38,8 +41,11 @@ export interface PostProps {
     excerpt?: string,
     column?: string,
     createAt?: string,
-    avatar?: ImagePros | string,
-    author?: string
+    image?: ImageProps | string,
+    author?: string | UserProps,
+    content?: string,
+    isHTML?:boolean
+
 }
 
 

@@ -5,8 +5,7 @@
         type="text" class="form-control" id="validationServer05" aria-describedby="validationServer05Feedback"
         @blur="validValue"
         :class="{'is-invalid' :inputRef.error}"
-        :value="inputRef.val"
-        @input="updateValue"
+       v-model="inputRef.val"
         v-bind="$attrs"
     >
     <textarea
@@ -14,8 +13,7 @@
         class="form-control" id="validationServer05" aria-describedby="validationServer05Feedback"
         @blur="validValue"
         :class="{'is-invalid' :inputRef.error}"
-        :value="inputRef.val"
-        @input="updateValue"
+        v-model="inputRef.val"
         v-bind="$attrs"
         rows="10"
     />
@@ -29,7 +27,16 @@
 <script setup lang="ts">
 
 console.log('script--setup')
-import {defineExpose, getCurrentInstance, onMounted, reactive, useAttrs} from "vue";
+import {
+  computed,
+  defineExpose,
+  getCurrentInstance,
+  onMounted,
+  reactive,
+  useAttrs,
+  watch,
+  WritableComputedRef
+} from "vue";
 import emitter from "@/hooks/Emitter";
 
 interface RulePro {
@@ -44,11 +51,7 @@ export type RulesProp = RulePro[]
 type tagType = 'input' | 'textarea'
 
 
-interface IInput {
-  val: string,
-  error?: boolean,
-  message?: string
-}
+
 
 interface IModelValueEvent {
   (e: 'update:modelValue', str: string): void
@@ -58,20 +61,21 @@ interface IModelValueEvent {
 
 
 const emailRegex = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
-
+const emit = defineEmits<IModelValueEvent>();
 const props = withDefaults(defineProps<{ rules: RulesProp, modelValue: string, currentTagType: tagType }>(), {
   currentTagType: 'input'
 })
-const inputRef = reactive<IInput>({val: props.modelValue || ''})
+const inputRef = reactive({
+  val: computed({
+    get: () => props.modelValue || '',
+    set: val => {
+      emit("update:modelValue", val)
+    }
+  }),
+  message: '',
+  error: false
+})
 
-const emit = defineEmits<IModelValueEvent>();
-
-
-const updateValue = (e: InputEvent) => {
-  const nVualue = (e.target as HTMLInputElement).value
-  inputRef.val = nVualue
-  emit("update:modelValue", nVualue)
-}
 
 const validValue = () => {
   // console.log('target', (ev.target as HTMLInputElement).value)

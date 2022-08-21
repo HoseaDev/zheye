@@ -17,7 +17,7 @@ import Message from "@/components/Message.vue";
 import TestRender from "@/components/TestRender";
 import Uploader from "@/components/Uploader.vue";
 import createMessage from "@/views/utils/CreateMessage";
-import {ImagePros, BaseResult} from "@/model/ModelDeclare";
+import {ImageProps, BaseResult} from "@/model/ModelDeclare";
 
 const store = useStore<GlobalDataPros>()
 // const user = store.state.user
@@ -35,17 +35,7 @@ const closeError = function () {
   console.log('click close ')
 
 }
-const onUploadBefore = (file: File): boolean => {
-  const isImg = file.type === 'image/jpeg'
-  if (!isImg) {
-    createMessage('只能上传jpg格式的文件', 'error', 2000)
-  }
-  console.log('isImg', isImg, file.type)
-  return isImg
-}
-const onUploadCompleted = (data: BaseResult<ImagePros>) => {
-  console.log('data', data.data.url)
-}
+
 
 
 onMounted(() => {
@@ -62,14 +52,6 @@ onMounted(() => {
 <template>
   <div class="container-fluid">
     <global-header :user="user2"></global-header>
-    <uploader :beforeUpload="onUploadBefore" @onFileCompleted="onUploadCompleted" >
-      <!--    <uploader @beforeUpload="onUploadBefore" @onFileCompleted="onUploadCompleted">-->
-      <h2>点击上传</h2>
-      <template #uploaded="{ uploadData }">
-        <img :src="uploadData.url" alt="">
-      </template>
-
-    </uploader>
     <loading-view :isShow="isShow"></loading-view>
     <!--    <message :error="error" @close-message="closeError" v-if="error.status" :type="'success'"></message>-->
     <router-view></router-view>

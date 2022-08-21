@@ -1,10 +1,10 @@
 <template>
   <div>
-    <div class="file-upload-container" @click.stop="triggerUpload">
+    <div class="file-upload-container" @click.stop="triggerUpload" v-bind="this.$attrs">
       <slot name="loading" v-if="fileStatus==='uploading'">
         <button class="btn btn-primary">上传中</button>
       </slot>
-      <slot name="uploaded" v-if="fileStatus==='success'" :uploadData="uploadData">
+      <slot name="uploaded" v-if="fileStatus==='success'" :dataProps="uploadData">
         <button class="btn btn-primary">上传成功</button>
       </slot>
       <slot name="error" v-if="fileStatus==='error'">
@@ -13,8 +13,8 @@
       <slot v-else v-if="fileStatus==='ready'">
         <button class="btn btn-primary">上传文件</button>
       </slot>
-      <div  @click.stop="restData" v-if="fileStatus==='success'">
-        <slot name="delete" >
+      <div @click.stop="restData" v-if="fileStatus==='success'">
+        <slot name="delete">
           <button class="btn-warning" @click.stop="restData">删除图片</button>
         </slot>
       </div>
@@ -32,11 +32,11 @@ type uploadStatus = 'success' | 'ready' | 'uploading' | 'error'
 const fileRef = ref<null | HTMLInputElement>()
 
 const fileStatus = ref<uploadStatus>('ready')
-const uploadData = ref<ImagePros>()
+const uploadData = ref<ImageProps>()
 
 
 interface UploadEvents {
-  (e: 'onFileCompleted', result: BaseResult<ImagePros>): void,
+  (e: 'onFileCompleted', result: BaseResult<ImageProps>): void,
 
   (e: 'fileUploadError', error: String): void
 
@@ -78,7 +78,7 @@ const triggerUpload = () => {
 
 
 import {PropType} from "vue";
-import {ImagePros, BaseResult} from "@/model/ModelDeclare";
+import {ImageProps, BaseResult} from "@/model/ModelDeclare";
 
 
 const restData = () => {
@@ -137,6 +137,12 @@ const handleFileChoose = (e: Event) => {
 
 }
 
+</script>
+<script lang="ts">
+export default {
+  inheritAttrs: false
+
+}
 </script>
 
 <style scoped>

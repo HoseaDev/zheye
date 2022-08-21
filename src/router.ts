@@ -6,6 +6,7 @@ import CreatePost from '@/views/Column/CreatePost.vue'
 import store from "@/store";
 import Register from '@/views/Login/Register.vue'
 import axios from "axios";
+import PostDetail from '@/views/Column/PostDetail.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -33,9 +34,15 @@ const router = createRouter({
         component: CreatePost,
         meta: {
             requiredLogin: true
+        },
+    }, {
+        path: '/posts/:id',
+        name: 'PostDetail',
+        component: PostDetail,
+        meta: {
+            requiredLogin: true
         }
-    },
-
+    }
     ]
 })
 
@@ -75,16 +82,6 @@ router.beforeEach((to, from, next) => {
 
 
     }
-
-
-    if (to.meta.requiredLogin && !store.state.user.isLogin) {
-        next('/login')
-    } else if (to.meta.redirectAlreadyLogin && store.state.user.isLogin) {
-        next('/')
-    } else {
-        next()
-    }
-
 
 })
 export default router

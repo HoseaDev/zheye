@@ -1,27 +1,27 @@
 import {Commit, createStore} from "vuex";
-import {UserProps, ColumnProps, PostProps, GlobalErrorMessagePros} from "@/model/ModelDeclare";
-import axios from "axios";
+import {UserProps, ColumnProps, PostProps, GlobalErrorMessagePros, ListPost} from "@/model/ModelDeclare";
+import axios, {AxiosRequestConfig} from "axios";
+import {arrToObj, objToArr} from "@/hooks/helper";
 
 //该类的作用是为了在ts中使用store的时候有类型推断
 export interface GlobalDataPros {
     user: UserProps,
     columns: ColumnProps[],
-    posts: PostProps[],
+    posts: { data: ListPost<PostProps>, loadedColumns: string[] },
     isShowLoading: boolean,
     token: string,
     error: GlobalErrorMessagePros
 }
 
 
-const getAndCommit = async (url: string, mutationName: string, commit: Commit) => {
-    const {data} = await axios.get(url)
-    commit(mutationName, data)
-    return data
-}
-
-const postAndCommit = async (url: string, mutationName: string, commit: Commit, payload: any) => {
-    const {data} = await axios.post(url, payload)
-    commit(mutationName, data)
+const asyncAndCommit = async (url: string, mutationName: string,
+                              commit: Commit, config: AxiosRequestConfig = {method: 'get'}, extraData?: any) => {
+    const {data} = await axios(url, config)
+    if (extraData) {
+        commit(mutationName, {data, extraData})
+    } else {
+        commit(mutationName, data)
+    }
     return data
 }
 
@@ -31,7 +31,7 @@ const store = createStore<GlobalDataPros>({
         token: localStorage.getItem('token') || '',
         user: {isLogin: false},
         columns: [],
-        posts: [],
+        posts: {data: {}, loadedColumns: []},
         isShowLoading: false,
         error: {status: false}
 
@@ -47,15 +47,15 @@ const store = createStore<GlobalDataPros>({
             delete axios.defaults.headers.common.Authorization
         },
         createPost(state, payload) {
-            state.posts.push(payload)
+            state.posts.data[payload._id] = payload
         },
         fetchColumn(state, obj) {
             console.log('getColumn', obj)
             state.columns = obj.data.list
         },
-        fetchPostsByColumnId(state, obj) {
-            console.log('getPostsByColumnId', obj)
-            state.posts = obj.data.list
+        fetchPosts(state, {data: rawData, extraData: columnId}) {
+            state.posts.data = {...state.posts.data, ...arrToObj(rawData.data.list)}
+            state.posts.loadedColumns.push(columnId)
         },
         setShowLoading(state, obj) {
             console.log('setShowLoading', obj)
@@ -71,15 +71,27 @@ const store = createStore<GlobalDataPros>({
             console.log(rowData.data)
             state.user = {...rowData.data, isLogin: true}
 
-        }
+        },
+        updatePost(state, {data}) {
+            state.posts.data[data._id] = data
+        },
+        fetchPost(state, {data: rawData}) {
+            console.log('rawData', rawData)
+            const {data} = rawData
+            console.log('data', data)
+            state.posts.data[data._id] = data
+        },
     },
     actions: {
         getColumn(context) {
-            return getAndCommit('/o/api/columns?currentPage=1&pageSize=5', 'fetchColumn', context.commit)
+            return asyncAndCommit('/o/api/columns?currentPage=1&pageSize=5', 'fetchColumn', context.commit)
 
         },
         getPostsByColumnId(context, cid: string) {
-            return getAndCommit(`/o/api/columns/${cid}/posts?currentPage=1&pageSize=5`, 'fetchPostsByColumnId', context.commit)
+            return asyncAndCommit(`/o/api/columns/${cid}/posts?currentPage=1&pageSize=5`, 'fetchPosts', context.commit, {method: "get"}, cid)
+        },
+        getPostById(context, pid: string) {
+            return asyncAndCommit(`/o/api/posts/${pid}`, 'fetchPost', context.commit, {method: "get"}, pid)
         },
         //loginAndFetch({ dispatch }, loginData) {
         //       return dispatch('login', loginData).then(() => {
@@ -87,19 +99,22 @@ const store = createStore<GlobalDataPros>({
         //       })
         //     }
         createPost({commit}, playload) {
-            return postAndCommit('/o/api/posts', 'createPost', commit, playload).then(data => {
+            return asyncAndCommit('/o/api/posts', 'setPost', commit, {method: "post"}, playload).then(data => {
                 return data
             })
         },
+        updatePost({commit}, {playload,id}) {
+            return asyncAndCommit(`/o/posts/${id}`, 'updatePost', commit, {method: "patch"}, playload)
+        },
 
         login({dispatch, commit}, user) {
-            return postAndCommit('/o/api/user/login', 'setUserToken', commit, user).then(data => {
+            return asyncAndCommit('/o/api/user/login', 'setUserToken', commit, {method: "post"}, user).then(data => {
                 return dispatch('getUserInfo')
             })
         },
         getUserInfo({dispatch, commit}) {
             console.log('getUserInfo start')
-            return getAndCommit('/o/api/user/current', 'setUserInfo', commit).then(data => {
+            return asyncAndCommit('/o/api/user/current', 'setUserInfo', commit).then(data => {
                 return data;
             })
         }
@@ -110,7 +125,10 @@ const store = createStore<GlobalDataPros>({
             return state.columns.filter(m => m._id === id)
         },
         getPostsByCId: (state) => (cId: string) => {
-            return state.posts.filter(m => m.column === cId)
+            return objToArr(state.posts.data).filter(p => p.column === cId)
+        },
+        getPostById: (state) => (id: string) => {
+            return state.posts.data[id]
         }
     }
 })
