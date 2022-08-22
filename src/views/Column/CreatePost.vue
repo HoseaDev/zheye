@@ -5,7 +5,7 @@ import 'bootstrap/dist/css/bootstrap.css'
 //这里如果只导入了bootstrap的css文件,复制代码的时候 js代码将无法生效. 这里我们在学习阶段.故暂时不导入js
 // import 'bootstrap/dist/js/bootstrap.js'
 import ValidInput, {RulesProp} from "@/components/ValidInput.vue";
-import {onMounted, ref} from "vue";
+import {onMounted, reactive, ref} from "vue";
 import ValidForm from "@/components/ValidForm.vue";
 import {useRouter, useRoute} from "vue-router";
 import {useStore} from "vuex";
@@ -13,7 +13,8 @@ import {UserProps, PostProps, BaseResult, ImageProps,} from "@/model/ModelDeclar
 import {GlobalDataPros} from "@/store";
 import createMessage from "@/views/utils/CreateMessage";
 import Uploader from "@/components/Uploader.vue";
-import EasyMDE from "easymde";
+import EasyMDE, {Options} from "easymde";
+import Editor from "@/components/Editor.vue";
 
 const requiredRules: RulesProp = [
   {type: "required", message: '不能为空'}
@@ -30,7 +31,10 @@ const uploadedData = ref()
 const contentRef = ref<null | HTMLTextAreaElement>()
 let imageId = ''
 isEditMode.value = !!route.query.id
-
+const editStatus = reactive({
+  error: false,
+  message: ''
+})
 const uploadCheck = (file: File): boolean => {
   const isImg = file.type === 'image/jpeg'
   if (!isImg) {
@@ -44,45 +48,55 @@ const handleFileUploaded = (data: BaseResult<ImageProps>) => {
   imgUrl.value = data.data.url
   imageId = data.data.url!!
 }
-
-const onFormSubmit = (result: boolean) => {
-  // checkEditor()
-  const {column, _id} = store.state.user
-  console.log('onFormSubmit')
-  if (column) {
-    const newPost: PostProps = {
-      title: titleVal.value,
-      content: contentVal.value,
-      column,
-      author: _id
-    }
-    if (imageId) {
-      newPost.image = imageId
-    }
-    const actionName = isEditMode ? 'updatePost' : 'createPost'
-    const sendData = isEditMode
-        ? {
-          id: route.query.id,
-          payload: newPost
-        }
-        : newPost
-    console.log('request ---')
-    store.dispatch(actionName, sendData).then(() => {
-      createMessage('发表成功，2秒后跳转到文章', 'success', 2000)
-      setTimeout(() => {
-        router.push({name: 'column', params: {id: column}})
-      }, 2000)
-    })
+const editOptions: Options = {
+  spellChecker: false
+}
+const checkEditor = () => {
+  console.log('editBlur', contentVal.value)
+  if (contentVal.value.trim() === '') {
+    editStatus.error = true
+    editStatus.message = "内容不能为空"
+  } else {
+    editStatus.error = false
+    editStatus.message = ""
   }
 }
 
-onMounted(() => {
-  if (contentRef.value) {
-    const easyMDe = new EasyMDE({element: contentRef.value})
-
+const onFormSubmit = (result: boolean) => {
+  checkEditor()
+  if (result && !editStatus.error) {
+    const {column, _id} = store.state.user
+    console.log('onFormSubmit')
+    if (column) {
+      const newPost: PostProps = {
+        title: titleVal.value,
+        content: contentVal.value,
+        column,
+        author: _id
+      }
+      if (imageId) {
+        newPost.image = imageId
+      }
+      const actionName = isEditMode ? 'updatePost' : 'createPost'
+      const sendData = isEditMode
+          ? {
+            id: route.query.id,
+            payload: newPost
+          }
+          : newPost
+      console.log('request ---')
+      store.dispatch(actionName, sendData).then(() => {
+        createMessage('发表成功，2秒后跳转到文章', 'success', 2000)
+        setTimeout(() => {
+          router.push({name: 'column', params: {id: column}})
+        }, 2000)
+      })
+    }
   }
 
+}
 
+onMounted(() => {
   if (isEditMode.value) {
     console.log('isEditMode', isEditMode)
     store.dispatch('getPostById', route.query.id).then((rawData: BaseResult<PostProps>) => {
@@ -108,11 +122,15 @@ onMounted(() => {
         :beforeUpload="uploadCheck"
         @file-uploaded="handleFileUploaded"
         :uploaded="uploadedData"
-        class="d-flex align-items-center justify-content-center bg-light text-secondary w-100 my-4"
+        class="uploader d-flex align-items-center justify-content-center bg-light text-secondary w-100 my-4"
     >
-      <h2>点击上传头图</h2>
+      <template #default>
+        <div class="uploader--child d-flex align-items-center ">
+          <h2 class="text-center">点击上传头图</h2>
+        </div>
+      </template>
       <template #loading>
-        <div class="d-flex">
+        <div class="uploader--child d-flex align-items-center">
           <div class="spinner-border text-secondary" role="status">
             <span class="visually-hidden">Loading...</span>
           </div>
@@ -120,14 +138,14 @@ onMounted(() => {
         </div>
       </template>
       <template #uploaded="dataProps">
-        <div class="uploaded-area">
-          <img :src="dataProps.uploadedData && dataProps.uploadedData.data.url">
+        <div class="uploaded-area uploader--child d-flex align-items-center">
+          <img :src="dataProps.uploadedData && dataProps.uploadedData.url">
           <h3>点击重新上传</h3>
         </div>
       </template>
     </uploader>
     <valid-form @submit-form="onFormSubmit">
-      <div class="mb-3">
+      <div class="mb-3 ">
         <label class="form-label">文章标题：</label>
         <valid-input
             :rules="requiredRules" v-model="titleVal"
@@ -137,21 +155,14 @@ onMounted(() => {
       </div>
       <div class="mb-3">
         <label class="form-label">文章详情：</label>
-        <!--        <editor-->
-        <!--            v-model="contentVal"-->
-        <!--            :options="editorOptions"-->
-        <!--            @blur="checkEditor"-->
-        <!--            :class="{'is-invalid': !editorStatus.isValid}"-->
-        <!--        >-->
-        <!--        </editor>-->
-        <!--        <valid-input-->
-        <!--            :rules="requiredRules" v-model="contentVal"-->
-        <!--            placeholder="文章内容"-->
-        <!--            :current-tag-type="'textarea'"-->
-        <!--            ref="contentRef"-->
-        <!--        />-->
-        <textarea ref="contentRef"></textarea>
-        <!--        <span v-if="!editorStatus.isValid" class="invalid-feedback mt-1">{{ editorStatus.message }}</span>-->
+        <editor
+            v-model="contentVal"
+            :class="{'is-invalid':editStatus.error}"
+            @blur="checkEditor"
+            :options="editOptions"
+        >
+        </editor>
+        <span class="invalid-feedback mt-1" v-if="editStatus.error">{{ editStatus.message }}wula</span>
       </div>
       <template #submit>
         <button class="btn btn-primary btn-large">{{ isEditMode ? '更新文章' : '发表文章' }}
@@ -161,13 +172,16 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped lang="css">
-.create-post-page .file-upload-container {
-  height: 200px;
-  background: red;
-  cursor: pointer;
-  overflow: hidden;
+<style scoped lang="scss">
+.create-post-page {
+  .uploader--child {
+    height: 200px;
+    cursor: pointer;
+    overflow: hidden;
+
+  }
 }
+
 
 .create-post-page .file-upload-container img {
   width: 100%;

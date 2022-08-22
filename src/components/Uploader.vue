@@ -1,10 +1,10 @@
 <template>
-  <div>
-    <div class="file-upload-container" @click.stop="triggerUpload" v-bind="this.$attrs">
+  <div class="file-upload">
+    <div class="file-upload-container" @click.stop="triggerUpload" v-bind="$attrs">
       <slot name="loading" v-if="fileStatus==='uploading'">
         <button class="btn btn-primary">上传中</button>
       </slot>
-      <slot name="uploaded" v-if="fileStatus==='success'" :dataProps="uploadData">
+      <slot name="uploaded" v-if="fileStatus==='success'" :uploadedData="uploadData">
         <button class="btn btn-primary">上传成功</button>
       </slot>
       <slot name="error" v-if="fileStatus==='error'">
@@ -119,8 +119,9 @@ const handleFileChoose = (e: Event) => {
       }
     }).then((response) => {
       fileStatus.value = 'success'
-      console.log(response)
+
       uploadData.value = response.data.data
+      console.log('uploadData', uploadData)
       emits("onFileCompleted", response.data)
 
     }).catch((e) => {
@@ -145,6 +146,3 @@ export default {
 }
 </script>
 
-<style scoped>
-
-</style>

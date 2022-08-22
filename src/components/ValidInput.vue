@@ -62,7 +62,7 @@ interface IModelValueEvent {
 
 const emailRegex = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
 const emit = defineEmits<IModelValueEvent>();
-const props = withDefaults(defineProps<{ rules: RulesProp, modelValue: string, currentTagType: tagType }>(), {
+const props = withDefaults(defineProps<{ rules: RulesProp, modelValue: string, currentTagType?: tagType }>(), {
   currentTagType: 'input'
 })
 const inputRef = reactive({
